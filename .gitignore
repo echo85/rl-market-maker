@@ -209,9 +209,6 @@ __marimo__/
 extra/
 
 # Sweep results (large CSVs; keep the directory but ignore generated files)
-results/*.csv
-results/histories/**/*.npz
-results/plots/**/*.png
 !results/.gitkeep
 # Core LaTeX auxiliary files
 *.aux

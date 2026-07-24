@@ -1,0 +1,1 @@
+timestamp,config,seed,alpha,n_features,mode,train_return,eval_return,eval_return_initial,eval_return_slope,train_return_slope,weight_norm,elapsed_s
