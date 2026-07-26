@@ -73,7 +73,6 @@ def evaluate(
     *,
     max_steps: Optional[int] = None,
     seed: Optional[int] = None,
-    action_mapping: Optional[Callable] = None,
 ) -> tuple[float, float, np.ndarray]:
     """Run a batch of greedy evaluation episodes.
 
@@ -94,8 +93,6 @@ def evaluate(
         Seed used for the *first* environment reset of the evaluation batch.
         Subsequent resets advance the same RNG, producing a deterministic
         sequence of evaluation episodes.
-    action_mapping : callable, optional
-        A function to map the agent's integer action to the environment's required action space format.
 
     Returns
     -------
@@ -114,8 +111,7 @@ def evaluate(
         steps = 0
         while True:
             action = agent.select_action(obs, greedy=True)
-            env_action = action_mapping(action) if action_mapping else action
-            obs, reward, terminated, truncated, _ = env.step(env_action)
+            obs, reward, terminated, truncated, _ = env.step(action)
             ep_return = ep_return + reward
             steps += 1
             if terminated or truncated:
@@ -139,7 +135,6 @@ def train(
     eval_max_steps: Optional[int] = None,
     seed: Optional[int] = None,
     progress: bool = False,
-    action_mapping: Optional[Callable] = None,
 ) -> TrainingHistory:
     """Train ``agent`` on ``env`` for ``n_episodes`` episodes.
 
@@ -171,8 +166,6 @@ def train(
     progress : bool
         If True and the ``tqdm`` package is available, display a progress
         bar over the training episodes.
-    action_mapping : callable, optional
-        A function to map the agent's integer action to the environment's required action space format.
 
     Returns
     -------
@@ -197,10 +190,7 @@ def train(
 
         action = agent.select_action(obs)
         while True:
-            env_action = action_mapping(action) if action_mapping else action
-            next_obs, reward, terminated, truncated, _ = env.step(env_action)
-            #print(f"Step {ep_length}: Action = {action}, env_action = {env_action}, reward = {reward}")
-            #print(f"Action = {action}, env_action = {env_action}, next_obs = {next_obs}")
+            next_obs, reward, terminated, truncated, _ = env.step(action)
 
             # Sample the next action *before* the update, so that on-policy
             # methods (SARSA) can use it as part of their TD target.
@@ -251,7 +241,6 @@ def train(
                 agent, eval_env,
                 n_episodes=eval_episodes,
                 max_steps=eval_max_steps,
-                action_mapping=action_mapping,
             )
             history.eval_episodes.append(ep + 1)
             history.eval_mean_returns.append(mean_ret)

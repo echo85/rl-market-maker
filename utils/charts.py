@@ -152,7 +152,7 @@ class MarketCharts:
             plt.show()
 
     @staticmethod
-    def plot_value_function_heatmaps(agents, base_state, MACD_IDX, PORT_STD_IDX, hold_action=13):
+    def plot_value_function_heatmaps(agents, base_state, MACD_IDX, PORT_STD_IDX, hold_action=(1, 1, 1)):
         macd_vals = np.linspace(-0.015, 0.015, 100)
         port_std_vals = np.linspace(0, 0.03, 100)
         MACD, PORT_STD = np.meshgrid(macd_vals, port_std_vals)
@@ -180,7 +180,7 @@ class MarketCharts:
         plt.show()
 
     @staticmethod
-    def plot_weight_sparsity(agents, hold_action=13):
+    def plot_weight_sparsity(agents, hold_action=(1, 1, 1)):
         plt.figure(figsize=(12, 4))
         
         plt.subplot(1, 3, 1)
@@ -200,8 +200,11 @@ class MarketCharts:
 
     @staticmethod
     def decode_action(a):
-        op0 = a % 3; a1 = a // 3; op1 = a1 % 3; op2 = a1 // 3
         syms = ["Sell", "Hold", "Buy"]
+        if isinstance(a, (int, np.integer)):
+            op0 = a % 3; a1 = a // 3; op1 = a1 % 3; op2 = a1 // 3
+        else:
+            op0, op1, op2 = a
         return f"{syms[op0]} / {syms[op1]} / {syms[op2]}"
 
     @staticmethod
@@ -214,7 +217,7 @@ class MarketCharts:
         
         RSI_IDX = 7
         PORT_STD_IDX = 9
-        HOLD_ACTION = 13 
+        HOLD_ACTION = (1, 1, 1) 
         N_EPISODES_ROLLOUT = 10
         MAX_STEPS_R = 250
         
@@ -259,11 +262,14 @@ class MarketCharts:
                 f = TileCoder(low=feat.low, high=feat.high, n_tiles=feat.n_tiles, n_tilings=TC_N_TILINGS, feature_indices=feat.feature_indices, seed=s)
             elif isinstance(feat, RBFFeatures):
                 f = RBFFeatures(low=feat.low, high=feat.high, n_centers=feat.n_centers, sigma=RBF_SIGMA, normalize=True, feature_indices=feat.feature_indices)
-            else:
+            elif isinstance(feat, PolynomialFeatures):
                 f = PolynomialFeatures(state_dim=11, degree=2, feature_indices=feat.feature_indices, low=feat.low, high=feat.high)
+            else:
+                from utils.features import RawRepresentation
+                f = RawRepresentation(state_dim=11, feature_indices=feat.feature_indices, low=feat.low, high=feat.high)
                 
             env = make_env_stochastic()
-            agent = LinearSARSAAgent(n_actions=env.action_space.n, feature_extractor=f, alpha=0.01, seed=s)
+            agent = LinearSARSAAgent(action_space=env.action_space, feature_extractor=f, alpha=0.01, seed=s)
             agent.W = runs_data[seed_idx]["weights"]
             agent.epsilon = 0.0
             
@@ -271,9 +277,9 @@ class MarketCharts:
             for ep in range(N_EPISODES_ROLLOUT):
                 obs, _ = env.reset(seed=MASTER_SEED + ep)
                 for _ in range(MAX_STEPS_R):
-                    a = int(agent.select_action(obs, greedy=True))
+                    a = agent.select_action(obs, greedy=True)
                     states_visited.append(obs.copy())
-                    actions_taken.append(a)
+                    actions_taken.append(tuple(a) if isinstance(a, (list, np.ndarray)) else a)
                     obs, _, term, trunc, _ = env.step(a)
                     if term or trunc: break
                     
@@ -291,10 +297,10 @@ class MarketCharts:
             ax.set_title(f'{label}\n(Seed {seed_idx})', fontsize=12)
             fig.colorbar(hb, ax=ax, label='log(visits)')
             
-            unique_actions, action_counts = np.unique(actions_taken, return_counts=True)
+            unique_actions, action_counts = np.unique(actions_taken, axis=0, return_counts=True)
             sorted_idx = np.argsort(-action_counts)
-            action_freqs_per_agent[label] = [(unique_actions[i], action_counts[i]) for i in sorted_idx]
-            n_hold = int(np.sum(actions_taken == HOLD_ACTION))
+            action_freqs_per_agent[label] = [(tuple(unique_actions[i]) if isinstance(unique_actions[i], np.ndarray) else unique_actions[i], action_counts[i]) for i in sorted_idx]
+            n_hold = int(np.sum([np.array_equal(a, HOLD_ACTION) for a in actions_taken]))
             summary_rows.append((label, len(states_visited), n_hold, 100.0 * n_hold / len(actions_taken)))
             
         for i in range(len(feature_sets_experiments), len(axes_flat)):
@@ -312,7 +318,11 @@ class MarketCharts:
             for a, count in freqs[:5]:
                 desc = MarketCharts.decode_action(a)
                 pct = 100.0 * count / total_actions
-                print(f"{a:<12}{desc:<30}{count:<10}{pct:>5.1f}%")
+                if isinstance(a, tuple):
+                    a_str = "(" + ", ".join(str(int(x)) for x in a) + ")"
+                else:
+                    a_str = str(a)
+                print(f"{a_str:<12}{desc:<30}{count:<10}{pct:>5.1f}%")
 
     @staticmethod
     def plot_feature_sweep_results(df):

@@ -252,3 +252,34 @@ class PolynomialFeatures:
                 feat[i] = np.prod(s[list(comb)])
                 
         return feat
+
+
+# ---------------------------------------------------------------------------
+# Raw Features
+# ---------------------------------------------------------------------------
+
+class RawRepresentation:
+    """Raw features for continuous state spaces.
+    
+    Directly returns the state vector components as features.
+    """
+    def __init__(
+        self,
+        state_dim: int,
+        feature_indices: Optional[List[int]] = None,
+        low: Optional[np.ndarray] = None,
+        high: Optional[np.ndarray] = None,
+    ) -> None:
+        self.feature_indices = feature_indices
+        self.feature_dim = len(feature_indices) if feature_indices is not None else state_dim
+        self.low = low
+        self.high = high
+        
+        self.n_features = self.feature_dim
+
+    def __call__(self, state: np.ndarray) -> np.ndarray:
+        s = np.asarray(state, dtype=np.float64)
+        if self.feature_indices is not None:
+            s = s[self.feature_indices]
+            
+        return s.reshape(self.feature_dim)

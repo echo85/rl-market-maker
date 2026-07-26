@@ -7,9 +7,10 @@ class FeatureCalibration:
         _cal_obs = []
         for _ in range(episodes):
             _env = make_env_fn()
+            _env.action_space.seed(int(_cal_rng.integers(1 << 31)))
             _o, _ = _env.reset(seed=int(_cal_rng.integers(1 << 31)))
             for _ in range(max_steps):
-                _a = int(_cal_rng.integers(_env.action_space.n))
+                _a = _env.action_space.sample()
                 _o, _, _term, _trunc, _ = _env.step(_a)
                 _cal_obs.append(_o.copy())
                 if _term or _trunc:

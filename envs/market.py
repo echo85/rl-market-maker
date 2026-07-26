@@ -72,10 +72,10 @@ class MarketEnv(gym.Env):
             # For historical replay, we can only run as many steps as we have data for
             self.max_steps = len(df_prices) - self.warmup_steps - 1
 
-        # Action space: Discrete(3^num_risky_assets), one op per asset in fixed-width
-        # little-endian encoding. Each op_i in {0: sell 10% of position, 1: hold,
-        # 2: buy 10% of available cash}. action = sum_i op_i * 3**i.
-        self.action_space = spaces.Discrete(3 ** self.num_risky_assets)
+        # Action space: MultiDiscrete([3, ...]), one op per asset.
+        # Each op_i in {0: sell 10% of position, 1: hold,
+        # 2: buy 10% of available cash}.
+        self.action_space = spaces.MultiDiscrete([3] * self.num_risky_assets)
 
         # 11-D state: prices(3) + alloc_assets(3) + cash_ratio(1) + rsi(1) + corr(1) + port_std(1) + macd(1)
         #   0..2  prices
@@ -155,13 +155,12 @@ class MarketEnv(gym.Env):
     def step(self, action):
         if not self.action_space.contains(action):
             raise ValueError(f"Invalid action {action}")
-        action = int(np.asarray(action).item())
 
         # 1. Execute Trades (joint action: one op per asset, sequential in asset order)
         SELL_PENALTY_RATE = 0.1
         n = self.num_risky_assets
         for i in range(n):
-            op = (action // (3 ** i)) % 3
+            op = action[i]
             if op == 0: # sell
                 sell_shares = self.shares[i] * 0.10
                 if sell_shares > 0:

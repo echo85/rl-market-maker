@@ -207,7 +207,9 @@ marimo/_lsp/
 __marimo__/
 
 extra/
-
+results/*.csv
+results/histories/**/*.npz
+results/plots/**/*.png
 # Sweep results (large CSVs; keep the directory but ignore generated files)
 !results/.gitkeep
 # Core LaTeX auxiliary files

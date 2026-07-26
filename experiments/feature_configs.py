@@ -41,7 +41,7 @@ import numpy as np
 import pandas as pd
 
 from envs.market import MarketEnv
-from utils.features import TileCoder, RBFFeatures, PolynomialFeatures
+from utils.features import TileCoder, RBFFeatures, PolynomialFeatures, RawRepresentation
 
 
 # ---------------------------------------------------------------------------
@@ -88,19 +88,27 @@ def _safe_name(s: str) -> str:
 
 
 FEATURE_CONFIGS: List[Dict[str, Any]] = [
+    {
+        "name": "Set A - Raw (prices)",
+        "kind": "raw",
+        "feature_indices": [0, 1, 2],
+        "low": [0, 0, 0],
+        "high": [1500, 1500, 1500],
+        "alpha": 0.0001,
+    },
     # ---- Set 1: raw signals (tile coding) -------------------------------
     {
-        "name": "Set A - Raw (TileCoder)",
+        "name": "Set A - TileCoder (Raw Prices)",
         "kind": "tile",
-        "feature_indices": [0, 1, 2, 6],
-        "low": _as_list([0, 0, 0, 0]),
-        "high": _as_list([1500, 1500, 1500, 1]),
-        "n_tiles": list(TC_N_TILES),
+        "feature_indices": [0, 1, 2],
+        "low": _as_list([0, 0, 0]),
+        "high": _as_list([1500, 1500, 1500]),
+        "n_tiles": list([5, 5, 5]),
         "n_tilings": TC_N_TILINGS,
         "alpha": TC_ALPHA,
     },
     {
-        "name": "Set I - Raw Portfolio Allocation (TileCoder)",
+        "name": "Set B - TileCoder (asset allocation)",
         "kind": "tile",
         "feature_indices": [3, 4, 5, 6],
         "low": _as_list([0, 0, 0, 0]),
@@ -111,7 +119,7 @@ FEATURE_CONFIGS: List[Dict[str, Any]] = [
     },
     # ---- Set M: indicators (sma, RSI, avg_corr) ------------------------
     {
-        "name": "Set B - mono (port_std)",
+        "name": "Set C - TileCoder (port_std)",
         "kind": "tile",
         "feature_indices": [9],
         "low": _as_list([0]),
@@ -122,7 +130,7 @@ FEATURE_CONFIGS: List[Dict[str, Any]] = [
     },
     # ---- Set M: indicators (sma, RSI, avg_corr) ------------------------
     {
-        "name": "Set C - (MACD, port_std)",
+        "name": "Set D - TileCoder (MACD, port_std)",
         "kind": "tile",
         "feature_indices": [10,9],
         "low": _as_list([-0.015,0]),
@@ -133,7 +141,7 @@ FEATURE_CONFIGS: List[Dict[str, Any]] = [
     },
     # ---- Set I: indicators + MACD histogram (tile coding) -------------
     {
-        "name": "Set D - (MACD, port_std, RSI)",
+        "name": "Set E - TileCoder (MACD, port_std, RSI)",
         "kind": "tile",
         "feature_indices": [10, 9, 7],   # MACD, port_std, RSI
         "low": _as_list([-0.015, 0, 0]),
@@ -144,7 +152,7 @@ FEATURE_CONFIGS: List[Dict[str, Any]] = [
     },
     # ---- Set I: indicators + MACD histogram (tile coding) -------------
     {
-        "name": "Set E - (avg_corr, RSI, MACD)",
+        "name": "Set F - TileCoder (avg_corr, RSI, MACD)",
         "kind": "tile",
         "feature_indices": [8, 7, 10],   # avg_corr, RSI, MACD
         "low": _as_list([-0.5, 0,  -0.015]),
@@ -155,7 +163,7 @@ FEATURE_CONFIGS: List[Dict[str, Any]] = [
     },
     # ---- Set 3: polynomial features (degree 2) -------------------------
     {
-        "name": "Set F - Polynomial (RSI, MACD, port_std)",
+        "name": "Set E - Polynomial (RSI, MACD, port_std)",
         "kind": "poly",
         "feature_indices": [7, 10, 9], # RSI, MACD, port_std
         "low": _as_list([0, -0.015, 0]),
@@ -165,7 +173,7 @@ FEATURE_CONFIGS: List[Dict[str, Any]] = [
     },
     # ---- Set 2: hand-crafted indicators (RBF) --------------------------
     {
-        "name": "Set G - RBF (MACD, port_std)",
+        "name": "Set D - RBF (MACD, port_std)",
         "kind": "rbf",
         "feature_indices": [10,9],
         "low": _as_list([-0.015,0]),
@@ -177,7 +185,7 @@ FEATURE_CONFIGS: List[Dict[str, Any]] = [
     },
     # ---- Set I: indicators + MACD histogram (tile coding) -------------
     {
-        "name": "Set H - RBF (port_std, RSI, MACD)",
+        "name": "Set E - RBF (port_std, RSI, MACD)",
         "kind": "rbf",
         "feature_indices": [9, 7, 10],   # port_std, RSI, MACD
         "low": _as_list([0, 0,  -0.015]),
@@ -189,7 +197,7 @@ FEATURE_CONFIGS: List[Dict[str, Any]] = [
     },
     # ---- Set 3: polynomial features (degree 2) -------------------------
     {
-        "name": "Set L - Polynomial (asset allocation)",
+        "name": "Set B - Polynomial (asset allocation)",
         "kind": "poly",
         "feature_indices": [3, 4, 5, 6], 
         "low": _as_list([0, 0, 0, 0]),
@@ -247,6 +255,12 @@ def make_feature_extractor(cfg: Dict[str, Any], seed: int):
         return PolynomialFeatures(
             state_dim=11,
             degree=cfg["degree"],
+            feature_indices=indices,
+            low=low, high=high,
+        )
+    if kind == "raw":
+        return RawRepresentation(
+            state_dim=11,
             feature_indices=indices,
             low=low, high=high,
         )

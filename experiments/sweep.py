@@ -164,7 +164,7 @@ def _run_one(args: Tuple[str, int, int, int, float, str, bool, bool, str, int, s
 
     agent = LinearSARSAAgent(
         feature_extractor=feat,
-        n_actions=env_train.action_space.n,
+        action_space=env_train.action_space,
         alpha=alpha,
         epsilon_start=1.0,
         epsilon_decay=0.997,
