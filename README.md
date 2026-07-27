@@ -42,3 +42,6 @@ Plot the training trajectories for all configurations and save them to a directo
 ```bash
 python -m experiments.plot_history --all --out results/plots/
 ```
+
+## Report of the Project
+[Link to Report](https://github.com/echo85/rl-market-maker/blob/main/report.pdf)
