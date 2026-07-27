@@ -117,84 +117,6 @@ FEATURE_CONFIGS: List[Dict[str, Any]] = [
         "n_tilings": TC_N_TILINGS,
         "alpha": TC_ALPHA,
     },
-    # ---- Set M: indicators (sma, RSI, avg_corr) ------------------------
-    {
-        "name": "Set C - TileCoder (port_std)",
-        "kind": "tile",
-        "feature_indices": [9],
-        "low": _as_list([0]),
-        "high": _as_list([0.03]),
-        "n_tiles": [8],
-        "n_tilings": TC_N_TILINGS,
-        "alpha": TC_ALPHA,
-    },
-    # ---- Set M: indicators (sma, RSI, avg_corr) ------------------------
-    {
-        "name": "Set D - TileCoder (MACD, port_std)",
-        "kind": "tile",
-        "feature_indices": [10,9],
-        "low": _as_list([-0.015,0]),
-        "high": _as_list([0.015,0.03]),
-        "n_tiles": [6,6],
-        "n_tilings": TC_N_TILINGS,
-        "alpha": TC_ALPHA,
-    },
-    # ---- Set I: indicators + MACD histogram (tile coding) -------------
-    {
-        "name": "Set E - TileCoder (MACD, port_std, RSI)",
-        "kind": "tile",
-        "feature_indices": [10, 9, 7],   # MACD, port_std, RSI
-        "low": _as_list([-0.015, 0, 0]),
-        "high": _as_list([0.015, 0.03, 100]),
-        "n_tiles": [4, 5, 4],
-        "n_tilings": TC_N_TILINGS,
-        "alpha": TC_ALPHA,
-    },
-    # ---- Set I: indicators + MACD histogram (tile coding) -------------
-    {
-        "name": "Set F - TileCoder (avg_corr, RSI, MACD)",
-        "kind": "tile",
-        "feature_indices": [8, 7, 10],   # avg_corr, RSI, MACD
-        "low": _as_list([-0.5, 0,  -0.015]),
-        "high": _as_list([0.75, 100, 0.015]),
-        "n_tiles": [4, 5, 4],
-        "n_tilings": TC_N_TILINGS,
-        "alpha": TC_ALPHA,
-    },
-    # ---- Set 3: polynomial features (degree 2) -------------------------
-    {
-        "name": "Set E - Polynomial (RSI, MACD, port_std)",
-        "kind": "poly",
-        "feature_indices": [7, 10, 9], # RSI, MACD, port_std
-        "low": _as_list([0, -0.015, 0]),
-        "high": _as_list([100, 0.015, 0.03]),
-        "degree": 2,
-        "alpha": POLY_ALPHA,
-    },
-    # ---- Set 2: hand-crafted indicators (RBF) --------------------------
-    {
-        "name": "Set D - RBF (MACD, port_std)",
-        "kind": "rbf",
-        "feature_indices": [10,9],
-        "low": _as_list([-0.015,0]),
-        "high": _as_list([0.015,0.03]),
-        "n_centers": [4, 4],
-        "sigma": RBF_SIGMA,
-        "normalize": True,
-        "alpha": RBF_ALPHA,
-    },
-    # ---- Set I: indicators + MACD histogram (tile coding) -------------
-    {
-        "name": "Set E - RBF (port_std, RSI, MACD)",
-        "kind": "rbf",
-        "feature_indices": [9, 7, 10],   # port_std, RSI, MACD
-        "low": _as_list([0, 0,  -0.015]),
-        "high": _as_list([0.03, 100, 0.015]),
-        "n_centers": [4, 4, 4],
-        "sigma": RBF_SIGMA,
-        "normalize": True,
-        "alpha": RBF_ALPHA,
-    },
     # ---- Set 3: polynomial features (degree 2) -------------------------
     {
         "name": "Set B - Polynomial (asset allocation)",
@@ -204,6 +126,39 @@ FEATURE_CONFIGS: List[Dict[str, Any]] = [
         "high": _as_list([1, 1, 1, 1]),
         "degree": 2,
         "alpha": POLY_ALPHA,
+    },
+    # ---- Set I: indicators + MACD histogram (tile coding) -------------
+    {
+        "name": "Set C - TileCoder (MACD, port_std, RSI)",
+        "kind": "tile",
+        "feature_indices": [10, 9, 7],   # MACD, port_std, RSI
+        "low": _as_list([-0.015, 0, 0]),
+        "high": _as_list([0.015, 0.03, 100]),
+        "n_tiles": [4, 5, 4],
+        "n_tilings": TC_N_TILINGS,
+        "alpha": TC_ALPHA,
+    },
+    # ---- Set 3: polynomial features (degree 2) -------------------------
+    {
+        "name": "Set C - Polynomial (RSI, MACD, port_std)",
+        "kind": "poly",
+        "feature_indices": [7, 10, 9], # RSI, MACD, port_std
+        "low": _as_list([0, -0.015, 0]),
+        "high": _as_list([100, 0.015, 0.03]),
+        "degree": 2,
+        "alpha": POLY_ALPHA,
+    },
+    # ---- Set I: indicators + MACD histogram (tile coding) -------------
+    {
+        "name": "Set C - RBF (port_std, RSI, MACD)",
+        "kind": "rbf",
+        "feature_indices": [9, 7, 10],   # port_std, RSI, MACD
+        "low": _as_list([0, 0,  -0.015]),
+        "high": _as_list([0.03, 100, 0.015]),
+        "n_centers": [4, 4, 4],
+        "sigma": RBF_SIGMA,
+        "normalize": True,
+        "alpha": RBF_ALPHA,
     }
 
 ]
